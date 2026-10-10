@@ -173,6 +173,41 @@ tr.proj-row:hover td{background:rgba(255,255,255,.025)}
 .ds-open{background:var(--amber-dim);color:var(--amber)}
 .ds-set{background:var(--green-dim);color:var(--green)}
 
+/* ROLE SWITCH */
+.role-switch{display:flex;align-items:center;gap:6px}
+.role-select{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:11px;border-radius:20px;padding:5px 10px;cursor:pointer}
+
+/* AI STUDIO */
+.field-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px}
+.field-label:first-child{margin-top:0}
+.field-select,.field-textarea{width:100%;background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:8px 10px;font-size:12.5px;font-family:inherit}
+.field-textarea{resize:vertical;min-height:80px;margin-bottom:16px}
+.btn-primary{width:100%;padding:10px;background:var(--cyan);color:#000;border:none;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;transition:opacity .12s ease}
+.btn-primary:hover{opacity:.85}
+.btn-primary:disabled{opacity:.5;cursor:default}
+.btn-ghost{padding:8px 14px;background:var(--surface3);color:var(--text);border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;transition:background .12s ease}
+.btn-ghost:hover{background:var(--surface2)}
+.ai-empty{color:var(--muted);font-size:12.5px;padding:36px 0;text-align:center}
+.ai-loading{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12.5px;padding:36px 0;justify-content:center}
+.ai-result-card{border:1px solid var(--border2);border-radius:8px;padding:14px;background:var(--surface2)}
+.ai-result-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px}
+.ai-result-meta{font-size:11px;color:var(--muted);white-space:nowrap}
+.ai-result-body{font-size:12.5px;color:var(--text);line-height:1.6;white-space:pre-wrap;background:var(--black);border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:12px;max-height:220px;overflow-y:auto;font-family:ui-monospace,Menlo,Consolas,monospace}
+.ai-result-img{height:160px;border-radius:6px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);font-size:11px;letter-spacing:.04em;text-align:center;padding:0 20px}
+.ai-result-actions{display:flex;gap:8px}
+.ai-result-actions .btn-primary{width:auto;flex:1}
+.captured-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:12px}
+.captured-row:last-child{border-bottom:none}
+.captured-tool{width:140px;flex-shrink:0;color:var(--text)}
+.captured-proj{width:80px;flex-shrink:0;color:var(--muted)}
+.captured-summary{flex:1;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.captured-cost{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--text);flex-shrink:0}
+.board-empty-note{color:var(--muted);font-size:11px;text-align:center;padding:24px 0}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface3);border:1px solid var(--border2);color:var(--text);padding:10px 18px;border-radius:8px;font-size:12.5px;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;z-index:300}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
 @media(max-width:900px){
   .stats-row{grid-template-columns:repeat(2,1fr)}
   .split{grid-template-columns:1fr}
@@ -187,7 +222,17 @@ tr.proj-row:hover td{background:rgba(255,255,255,.025)}
   <div class="logo"><div class="logo-mark">⚡</div>Motion Adrenaline</div>
   <div class="logo-sub">Pipeline OS · Internal</div>
   <div class="nav-links" id="nav-links"></div>
-  <div class="nav-right"><div class="env-pill"><span class="env-dot"></span>Mock data — no backend connected</div></div>
+  <div class="nav-right">
+    <div class="role-switch">
+      <select class="role-select" id="role-select">
+        <option value="producer">View as Producer</option>
+        <option value="pm">View as PM</option>
+        <option value="artist">View as Artist</option>
+      </select>
+      <select class="role-select" id="artist-select" style="display:none"></select>
+    </div>
+    <div class="env-pill"><span class="env-dot"></span>Mock data — no backend connected</div>
+  </div>
 </nav>
 
 <!-- OVERVIEW -->
@@ -214,7 +259,7 @@ tr.proj-row:hover td{background:rgba(255,255,255,.025)}
 <div id="view-projects" class="view">
   <div class="view-head">
     <div class="view-title">Projects</div>
-    <div class="view-sub">Budget, time and cost tracking per project ID. Click a row for the full breakdown.</div>
+    <div class="view-sub" id="projects-sub">Budget, time and cost tracking per project ID. Click a row for the full breakdown.</div>
   </div>
   <div class="toolbar">
     <div class="ftabs" id="proj-filters"></div>
@@ -238,7 +283,7 @@ tr.proj-row:hover td{background:rgba(255,255,255,.025)}
 <div id="view-board" class="view">
   <div class="view-head">
     <div class="view-title">Pipeline Board</div>
-    <div class="view-sub">Drag a project card to move it to its next stage. (Prototype only — not yet wired to the tracker.)</div>
+    <div class="view-sub" id="board-sub">Drag a project card to move it to its next stage. (Prototype only — not yet wired to the tracker.)</div>
   </div>
   <div class="board" id="board-root"></div>
 </div>
@@ -259,6 +304,40 @@ tr.proj-row:hover td{background:rgba(255,255,255,.025)}
       <div class="card-title">Cost by model</div>
       <div id="gw-model-bars"></div>
     </div>
+  </div>
+</div>
+
+<!-- AI STUDIO -->
+<div id="view-aistudio" class="view">
+  <div class="view-head">
+    <div class="view-title">AI Studio</div>
+    <div class="view-sub" id="aistudio-sub">Connect to the studio AI gateway — generate, review, and save results straight to the project.</div>
+  </div>
+  <div class="split">
+    <div class="card">
+      <div class="card-title">New request</div>
+      <div class="field-label">Project</div>
+      <select class="field-select" id="ai-project"></select>
+      <div class="field-label">Tool</div>
+      <select class="field-select" id="ai-tool"></select>
+      <div class="field-label">DCC</div>
+      <select class="field-select" id="ai-dcc">
+        <option value="c4d">Cinema 4D</option>
+        <option value="hou">Houdini</option>
+        <option value="res">Resolve</option>
+      </select>
+      <div class="field-label">Prompt</div>
+      <textarea class="field-textarea" id="ai-prompt" placeholder="Describe what you need..."></textarea>
+      <button class="btn-primary" id="ai-generate-btn" onclick="generateAI()">Generate</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Result</div>
+      <div id="ai-result"><div class="ai-empty">Run a request to see the result here.</div></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Captured this session</div>
+    <div id="ai-captured"></div>
   </div>
 </div>
 
@@ -305,6 +384,7 @@ tr.proj-row:hover td{background:rgba(255,255,255,.025)}
   <button class="panel-close" onclick="closePanel()">✕</button>
   <div id="panel-content"></div>
 </div>
+<div class="toast" id="toast"></div>
 
 <script>
 /* ---------- mock data ---------- */
@@ -378,25 +458,81 @@ const DECISIONS = [
   {id:'owner',q:'Who owns the pipeline?',options:['Undecided','In-house TD','Outside developer','Shared / TBD']},
 ];
 
+const AI_TOOLS = [
+  {key:'scene',   label:'Scene assistant',    kind:'text',  costRange:[0.08,0.22], model:'Bedrock · Claude'},
+  {key:'texture', label:'Textures & HDRIs',   kind:'image', costRange:[0.90,2.10], model:'SDXL fine-tune'},
+  {key:'lookdev', label:'Look development',   kind:'image', costRange:[1.80,4.20], model:'ComfyUI · SDXL ControlNet'},
+  {key:'helper',  label:'Pipeline helper',    kind:'text',  costRange:[0.02,0.09], model:'Bedrock · Claude'},
+];
+const DCC_LABELS = {c4d:'C4D', hou:'Houdini', res:'Resolve'};
+const ALL_ARTISTS = [...new Set(PROJECTS.flatMap(p=>p.artists))].sort();
+let CAPTURED_ASSETS = [];
+
+/* ---------- roles ---------- */
+// Three personas share this one prototype: Producer and PM see the whole studio,
+// Artist sees only their own assigned work plus the AI Studio connector.
+let ROLE = 'producer';
+let CURRENT_ARTIST = null;
+const ROLE_VIEWS = {
+  producer: ['overview','projects','board','aistudio','gateway','aws','rollout','decisions'],
+  pm:       ['overview','projects','board','aistudio','gateway','rollout','decisions'],
+  artist:   ['projects','board','aistudio'],
+};
+const ROLE_DEFAULT = {producer:'overview', pm:'overview', artist:'aistudio'};
+function scopedProjects(){
+  return ROLE==='artist' && CURRENT_ARTIST ? PROJECTS.filter(p=>p.artists.includes(CURRENT_ARTIST)) : PROJECTS;
+}
+function populateArtistSelect(){
+  const sel = document.getElementById('artist-select');
+  sel.innerHTML = ALL_ARTISTS.map(a=>`<option value="${a}" ${a===CURRENT_ARTIST?'selected':''}>${a}</option>`).join('');
+}
+function setRole(role){
+  ROLE = role;
+  if(role==='artist'){
+    if(!CURRENT_ARTIST) CURRENT_ARTIST = ALL_ARTISTS[0];
+    document.getElementById('artist-select').style.display = '';
+    populateArtistSelect();
+  } else {
+    document.getElementById('artist-select').style.display = 'none';
+  }
+  try{ localStorage.setItem('pipelineos_role', role); }catch(e){}
+  activeView = ROLE_DEFAULT[role];
+  renderNav();
+  renderAll();
+}
+
 /* ---------- nav ---------- */
 const VIEWS = [
   {key:'overview',label:'Overview'},
   {key:'projects',label:'Projects'},
   {key:'board',label:'Pipeline Board'},
+  {key:'aistudio',label:'AI Studio'},
   {key:'gateway',label:'AI Gateway'},
   {key:'aws',label:'AWS'},
   {key:'rollout',label:'Rollout'},
   {key:'decisions',label:'Decisions'},
 ];
 const navLinks = document.getElementById('nav-links');
-VIEWS.forEach((v,i)=>{
-  const b = document.createElement('button');
-  b.className = 'nav-btn'+(i===0?' active':'');
-  b.textContent = v.label;
-  b.onclick = ()=>showView(v.key,b);
-  navLinks.appendChild(b);
-});
+let activeView = ROLE_DEFAULT[ROLE];
+function renderNav(){
+  const allowed = ROLE_VIEWS[ROLE];
+  if(!allowed.includes(activeView)) activeView = ROLE_DEFAULT[ROLE];
+  navLinks.innerHTML = '';
+  allowed.forEach(key=>{
+    const v = VIEWS.find(x=>x.key===key);
+    const b = document.createElement('button');
+    b.className = 'nav-btn'+(key===activeView?' active':'');
+    b.textContent = v.label;
+    b.onclick = ()=>showView(key,b);
+    navLinks.appendChild(b);
+  });
+  // Rebuilding the nav (role switch, or init) doesn't go through showView,
+  // so the visible .view panel has to be synced here too.
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+activeView).classList.add('active');
+}
 function showView(key,btn){
+  activeView = key;
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+key).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
@@ -475,7 +611,10 @@ document.querySelectorAll('th[data-sort]').forEach(th=>{
   });
 });
 function renderProjTable(){
-  let rows = PROJECTS.filter(p=>projFilter==='all'||p.stage===projFilter)
+  document.getElementById('projects-sub').textContent = ROLE==='artist'
+    ? `Showing only ${CURRENT_ARTIST}'s assigned projects. Click a row for the full breakdown.`
+    : 'Budget, time and cost tracking per project ID. Click a row for the full breakdown.';
+  let rows = scopedProjects().filter(p=>projFilter==='all'||p.stage===projFilter)
     .filter(p=>!projSearch || p.name.toLowerCase().includes(projSearch) || p.client.toLowerCase().includes(projSearch) || p.id.toLowerCase().includes(projSearch));
   rows.sort((a,b)=>{
     let av=a[sortField], bv=b[sortField];
@@ -535,6 +674,10 @@ function openPanel(id){
         <div class="timeline-item"><div class="timeline-dot"></div><div><div class="timeline-text">Last update</div><div class="timeline-time">${p.updated}</div></div></div>
         <div class="timeline-item"><div class="timeline-dot" style="background:var(--muted)"></div><div><div class="timeline-text">Entered ${si.label}</div><div class="timeline-time">stage history coming once the tracker is wired up</div></div></div>
       </div>
+      <div class="pb-section">
+        <div class="pb-label">AI assets captured</div>
+        ${CAPTURED_ASSETS.filter(a=>a.projId===p.id).map(a=>`<div class="cost-row"><span>${a.tool} · ${a.artist}</span><span class="cost-num">$${a.cost.toFixed(2)}</span></div>`).join('') || `<div style="font-size:12px;color:var(--muted)">None yet — generated in AI Studio and saved here automatically.</div>`}
+      </div>
     </div>
   `;
   document.getElementById('overlay').classList.add('open');
@@ -572,13 +715,28 @@ function autoScrollBoard(clientX){
   else if(rect.right - clientX < margin) board.scrollLeft += speed;
 }
 
+// Only Producer/PM drag cards — boardOrder is the whole studio's order, and an
+// Artist's board only renders a filtered subset, so reordering from a partial
+// DOM view would silently drop other artists' cards out of boardOrder.
+function canDragBoard(){ return ROLE !== 'artist'; }
+function visibleIdsInStage(key){
+  return boardOrder[key].filter(id=>{
+    const p = PROJECTS.find(x=>x.id===id);
+    return p && (ROLE!=='artist' || p.artists.includes(CURRENT_ARTIST));
+  });
+}
+
 function renderBoard(){
+  document.getElementById('board-sub').textContent = canDragBoard()
+    ? 'Drag a project card to move it to its next stage. (Prototype only — not yet wired to the tracker.)'
+    : `Showing only ${CURRENT_ARTIST}'s assigned projects by stage. Ask your PM to move a card.`;
+
   const root = document.getElementById('board-root');
   root.innerHTML = STAGES.map(s=>`
     <div class="board-col">
       <div class="board-col-head">
         <span class="board-col-title">${s.label}</span>
-        <span class="board-col-count">${boardOrder[s.key].length}</span>
+        <span class="board-col-count">${visibleIdsInStage(s.key).length}</span>
       </div>
       <div class="board-col-body" data-stage="${s.key}"></div>
     </div>
@@ -586,31 +744,38 @@ function renderBoard(){
 
   STAGES.forEach(s=>{
     const body = root.querySelector(`.board-col-body[data-stage="${s.key}"]`);
-    boardOrder[s.key].forEach(id=>{
+    const ids = visibleIdsInStage(s.key);
+    ids.forEach(id=>{
       const p = PROJECTS.find(x=>x.id===id);
       if(!p) return;
       const spent = p.spentTime+p.spentRender+p.spentAI;
       const card = document.createElement('div');
       card.className = 'board-card';
-      card.draggable = true;
       card.dataset.id = p.id;
-      card.innerHTML = `<div class="bc-top"><span class="bc-handle">⠿</span><span class="bc-id mono">${p.id}</span></div><div class="bc-name">${p.name}</div><div class="bc-foot"><span>${p.client}</span><span>${pct(spent,p.budget)}% used</span></div>`;
-      card.addEventListener('dragstart', e=>{
-        dragId = p.id; dragFromStage = s.key; dragEl = card;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', p.id);
-        requestAnimationFrame(()=>card.classList.add('dragging'));
-      });
-      card.addEventListener('dragend', ()=>{
-        card.classList.remove('dragging');
-        if(placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
-        document.querySelectorAll('.board-col-body.dragover').forEach(b=>b.classList.remove('dragover'));
-        dragId = null; dragEl = null;
-      });
+      const handle = canDragBoard() ? '<span class="bc-handle">⠿</span>' : '';
+      card.innerHTML = `<div class="bc-top">${handle}<span class="bc-id mono">${p.id}</span></div><div class="bc-name">${p.name}</div><div class="bc-foot"><span>${p.client}</span><span>${pct(spent,p.budget)}% used</span></div>`;
+      if(canDragBoard()){
+        card.draggable = true;
+        card.addEventListener('dragstart', e=>{
+          dragId = p.id; dragFromStage = s.key; dragEl = card;
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', p.id);
+          requestAnimationFrame(()=>card.classList.add('dragging'));
+        });
+        card.addEventListener('dragend', ()=>{
+          card.classList.remove('dragging');
+          if(placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+          document.querySelectorAll('.board-col-body.dragover').forEach(b=>b.classList.remove('dragover'));
+          dragId = null; dragEl = null;
+        });
+      }
       card.addEventListener('click', ()=>{ if(justDropped){ justDropped=false; return; } openPanel(p.id); });
       body.appendChild(card);
     });
-    if(!boardOrder[s.key].length) body.appendChild(placeholder.cloneNode());
+    if(!ids.length){
+      if(canDragBoard()) body.appendChild(placeholder.cloneNode());
+      else { const note = document.createElement('div'); note.className = 'board-empty-note'; note.textContent = 'None here'; body.appendChild(note); }
+    }
 
     body.addEventListener('dragover', e=>{
       e.preventDefault();
@@ -673,6 +838,136 @@ function renderGateway(){
   document.getElementById('gw-model-bars').innerHTML = Object.entries(byModel).sort((a,b)=>b[1]-a[1]).map(([m,c])=>`
     <div class="bar-row"><div class="bar-label">${m}</div><div class="bar-track"><div class="bar-fill" style="width:${pct(c,maxM)}%"></div></div><div class="bar-val">$${c.toFixed(2)}</div></div>
   `).join('');
+}
+
+/* ---------- AI studio ---------- */
+// This is the artist-facing connector described in the pipeline plan: pick a
+// project + tool, send a prompt to the "gateway", then capture the result onto
+// the project — which also drops a row into the AI Gateway log above and bumps
+// that project's AI spend everywhere it's shown (Overview, Projects, panel).
+let pendingAIResult = null;
+
+function renderAIStudioOptions(){
+  const projSel = document.getElementById('ai-project');
+  const prevProj = projSel.value;
+  const projects = scopedProjects();
+  projSel.innerHTML = projects.map(p=>`<option value="${p.id}">${p.id} — ${p.name}</option>`).join('');
+  if(projects.some(p=>p.id===prevProj)) projSel.value = prevProj;
+
+  const toolSel = document.getElementById('ai-tool');
+  if(!toolSel.dataset.filled){
+    toolSel.innerHTML = AI_TOOLS.map(t=>`<option value="${t.key}">${t.label}</option>`).join('');
+    toolSel.dataset.filled = '1';
+  }
+
+  document.getElementById('aistudio-sub').textContent = ROLE==='artist'
+    ? `Connected as ${CURRENT_ARTIST}. Generate with the studio gateway, then save results straight to the project.`
+    : 'Preview of the artist-facing AI connector. Generated results are logged to the AI Gateway and attached to the project.';
+
+  renderCapturedList();
+}
+
+function randCost([lo,hi]){ return Math.round((lo + Math.random()*(hi-lo))*100)/100; }
+
+function mockAIOutput(tool, prompt, proj){
+  if(tool.key==='scene'){
+    return `# Scene assistant — ${proj.id}\n# Prompt: "${prompt}"\nimport c4d\n\ndef main():\n    doc = c4d.documents.GetActiveDocument()\n    setup = c4d.BaseObject(c4d.Onull)\n    setup.SetName("${proj.id}_setup")\n    doc.InsertObject(setup)\n    c4d.EventAdd()\n\nif __name__=='__main__':\n    main()`;
+  }
+  return `Shot note — ${proj.name}\n\nRequest: "${prompt}"\n\nReviewed latest pass; naming and versioning follow studio convention (${proj.id}_v###). Flagged for next-stage handoff.`;
+}
+
+function generateAI(){
+  const btn = document.getElementById('ai-generate-btn');
+  const projId = document.getElementById('ai-project').value;
+  const toolKey = document.getElementById('ai-tool').value;
+  const dcc = document.getElementById('ai-dcc').value;
+  const prompt = document.getElementById('ai-prompt').value.trim();
+  const tool = AI_TOOLS.find(t=>t.key===toolKey);
+  const proj = PROJECTS.find(p=>p.id===projId);
+  const resultBox = document.getElementById('ai-result');
+  if(!proj || !prompt){
+    resultBox.innerHTML = `<div class="ai-empty">Pick a project and describe what you need first.</div>`;
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Generating…';
+  resultBox.innerHTML = `<div class="ai-loading"><div class="spinner"></div>Sending to the gateway — ${tool.model}…</div>`;
+
+  setTimeout(()=>{
+    const cost = randCost(tool.costRange);
+    const output = tool.kind==='image' ? null : mockAIOutput(tool, prompt, proj);
+    pendingAIResult = {proj, tool, dcc, prompt, cost, output};
+    renderResultCard(pendingAIResult);
+    btn.disabled = false; btn.textContent = 'Generate';
+  }, 900);
+}
+
+function renderResultCard(r){
+  document.getElementById('ai-result').innerHTML = `
+    <div class="ai-result-card">
+      <div class="ai-result-head">
+        <strong>${r.tool.label}</strong>
+        <span class="ai-result-meta">${r.tool.model} · $${r.cost.toFixed(2)}</span>
+      </div>
+      ${r.tool.kind==='image'
+        ? `<div class="ai-result-img" style="background:linear-gradient(135deg,var(--cyan-dim),var(--violet-dim))">Generated preview — "${r.prompt.slice(0,70)}"</div>`
+        : `<div class="ai-result-body">${r.output}</div>`}
+      <div class="ai-result-actions">
+        <button class="btn-primary" onclick="saveAIResult()">Save to ${r.proj.id}</button>
+        <button class="btn-ghost" onclick="discardAIResult()">Discard</button>
+      </div>
+    </div>`;
+}
+
+function discardAIResult(){
+  pendingAIResult = null;
+  document.getElementById('ai-result').innerHTML = `<div class="ai-empty">Run a request to see the result here.</div>`;
+}
+
+function saveAIResult(){
+  if(!pendingAIResult) return;
+  const r = pendingAIResult;
+  GW_LOG.unshift({
+    time: new Date().toTimeString().slice(0,5),
+    dcc: r.dcc, dccLabel: DCC_LABELS[r.dcc],
+    proj: r.proj.id,
+    use: `${r.tool.label} — ${r.prompt.slice(0,40)}`,
+    model: r.tool.model,
+    cost: r.cost,
+  });
+  r.proj.spentAI += r.cost;
+  r.proj.updated = 'just now';
+  CAPTURED_ASSETS.unshift({
+    id: 'AST-'+Math.random().toString(36).slice(2,8),
+    projId: r.proj.id,
+    artist: CURRENT_ARTIST || 'Producer',
+    tool: r.tool.label,
+    kind: r.tool.kind,
+    summary: (r.tool.kind==='image' ? 'Generated preview — ' : '') + r.prompt.slice(0,60),
+    cost: r.cost,
+  });
+  discardAIResult();
+  renderAll();
+  showToast(`Saved to ${r.proj.id} — logged to AI Gateway`);
+}
+
+function renderCapturedList(){
+  const list = CAPTURED_ASSETS.filter(a=> ROLE!=='artist' || a.artist===CURRENT_ARTIST);
+  document.getElementById('ai-captured').innerHTML = list.length ? list.map(a=>`
+    <div class="captured-row">
+      <span class="captured-tool">${a.tool}</span>
+      <span class="captured-proj mono">${a.projId}</span>
+      <span class="captured-summary">${a.summary}</span>
+      <span class="captured-cost">$${a.cost.toFixed(2)}</span>
+    </div>
+  `).join('') : `<div class="ai-empty">Nothing captured yet this session.</div>`;
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('show'), 2600);
 }
 
 /* ---------- AWS ---------- */
@@ -765,15 +1060,38 @@ function renderDecisions(){
 }
 
 /* ---------- init ---------- */
-showView('overview', navLinks.querySelector('.nav-btn'));
+function renderAll(){
+  renderOverview();
+  renderProjTable();
+  renderBoard();
+  renderGateway();
+  renderAIStudioOptions();
+  renderAWS();
+  renderRollout();
+  renderDecisions();
+}
+
+try{
+  const savedRole = localStorage.getItem('pipelineos_role');
+  if(savedRole && ROLE_VIEWS[savedRole]) ROLE = savedRole;
+  const savedArtist = localStorage.getItem('pipelineos_artist');
+  if(savedArtist && ALL_ARTISTS.includes(savedArtist)) CURRENT_ARTIST = savedArtist;
+}catch(e){}
+if(ROLE==='artist' && !CURRENT_ARTIST) CURRENT_ARTIST = ALL_ARTISTS[0];
+document.getElementById('role-select').value = ROLE;
+document.getElementById('artist-select').style.display = ROLE==='artist' ? '' : 'none';
+if(ROLE==='artist') populateArtistSelect();
+document.getElementById('role-select').addEventListener('change', e=>setRole(e.target.value));
+document.getElementById('artist-select').addEventListener('change', e=>{
+  CURRENT_ARTIST = e.target.value;
+  try{ localStorage.setItem('pipelineos_artist', CURRENT_ARTIST); }catch(e){}
+  renderAll();
+});
+
+activeView = ROLE_DEFAULT[ROLE];
+renderNav();
 renderProjFilters();
-renderOverview();
-renderProjTable();
-renderBoard();
-renderGateway();
-renderAWS();
-renderRollout();
-renderDecisions();
+renderAll();
 </script>
 </body>
 </html>
