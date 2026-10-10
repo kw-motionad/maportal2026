@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studio Pipeline OS — Motion Adrenaline</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --black:#0a0a0a;--surface:#141414;--surface2:#1c1c1c;--surface3:#242424;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#efefef;--muted:#777;--muted2:#aaa;
+  --cyan:#22d3ee;--cyan-dim:rgba(34,211,238,0.1);--cyan-dim2:rgba(34,211,238,0.2);
+  --amber:#fbbf24;--amber-dim:rgba(251,191,36,.1);
+  --green:#34d399;--green-dim:rgba(52,211,153,.1);
+  --violet:#a78bfa;--violet-dim:rgba(139,92,246,.12);
+  --red:#f87171;--red-dim:rgba(248,113,113,.1);
+}
+body{background:var(--black);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+
+/* NAV */
+nav{display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--border);background:var(--black);position:sticky;top:0;z-index:100;height:50px;gap:0}
+.logo{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;margin-right:8px;white-space:nowrap;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.logo-mark{width:26px;height:26px;background:var(--cyan);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#000;font-weight:900}
+.logo-sub{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:3px 7px;border:1px solid var(--border2);border-radius:20px;margin-right:16px;white-space:nowrap}
+.nav-links{display:flex;align-items:center;gap:1px;flex:1;overflow-x:auto;scrollbar-width:none}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-btn{padding:6px 12px;border-radius:6px;color:var(--muted2);font-size:12px;white-space:nowrap;cursor:pointer;background:none;border:none;transition:color .12s,background .12s}
+.nav-btn:hover{color:var(--text);background:var(--surface2)}
+.nav-btn.active{color:#000;background:var(--cyan);font-weight:600}
+.nav-right{display:flex;align-items:center;gap:8px;margin-left:auto;padding-left:12px;flex-shrink:0}
+.env-pill{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted2)}
+.env-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+
+.view{display:none;padding:28px 32px 60px}
+.view.active{display:block}
+.view-head{margin-bottom:22px}
+.view-title{font-size:21px;font-weight:700;color:#fff;margin-bottom:3px}
+.view-sub{font-size:13px;color:var(--muted)}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:26px}
+.stat-card{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:14px 16px}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.stat-num{font-size:21px;font-weight:700;color:#fff;line-height:1}
+.stat-delta{font-size:11px;margin-top:5px}
+.up{color:var(--red)}.down{color:var(--green)}.flat{color:var(--muted)}
+
+/* FLOW DIAGRAM */
+.flow{display:flex;align-items:stretch;gap:0;overflow-x:auto;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:20px;margin-bottom:24px}
+.flow-step{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:128px;padding:0 6px;position:relative}
+.flow-num{width:24px;height:24px;border-radius:50%;background:var(--cyan-dim);border:1px solid var(--cyan-dim2);color:var(--cyan);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.flow-label{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
+.flow-desc{font-size:10.5px;color:var(--muted);line-height:1.4}
+.flow-arrow{display:flex;align-items:center;color:var(--muted);padding-top:12px;flex-shrink:0;width:24px;justify-content:center}
+.flow-track{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border2);font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* TABLE / PROJECTS */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.ftabs{display:flex;gap:3px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:3px}
+.ftab{padding:5px 12px;border-radius:5px;font-size:11px;color:var(--muted2);cursor:pointer;background:none;border:none;white-space:nowrap}
+.ftab.active{background:var(--surface3);color:var(--text)}
+.search-wrap{display:flex;align-items:center;gap:7px;padding:6px 10px;background:var(--surface);border:1px solid var(--border2);border-radius:7px;min-width:200px;margin-left:auto}
+.search-wrap input{background:none;border:none;outline:none;color:var(--text);font-size:12px;width:100%}
+.search-wrap input::placeholder{color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px 12px;text-align:left;border-bottom:1px solid var(--border2);cursor:pointer;user-select:none;white-space:nowrap}
+th:hover{color:var(--text)}
+td{padding:12px;font-size:12.5px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr.proj-row{cursor:pointer;transition:background .1s}
+tr.proj-row:hover td{background:rgba(255,255,255,.025)}
+.pid{color:var(--muted);font-size:11px}
+.pname{font-weight:500;color:var(--text)}
+.pclient{color:var(--muted);font-size:11px}
+.stage-pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+.sdot{width:5px;height:5px;border-radius:50%}
+.st-intake{background:rgba(255,255,255,.08);color:#ddd}.st-intake .sdot{background:#ddd}
+.st-preprod{background:var(--violet-dim);color:var(--violet)}.st-preprod .sdot{background:var(--violet)}
+.st-production{background:var(--cyan-dim);color:var(--cyan)}.st-production .sdot{background:var(--cyan)}
+.st-aws{background:var(--amber-dim);color:var(--amber)}.st-aws .sdot{background:var(--amber)}
+.st-resolve{background:rgba(251,146,60,.12);color:#fb923c}.st-resolve .sdot{background:#fb923c}
+.st-delivered{background:var(--green-dim);color:var(--green)}.st-delivered .sdot{background:var(--green)}
+.budget-bar{width:110px;height:5px;border-radius:3px;background:var(--surface3);overflow:hidden;margin-top:4px}
+.budget-fill{height:100%;border-radius:3px}
+.cost-num{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.over{color:var(--red)}
+
+/* DETAIL PANEL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none}
+.overlay.open{display:block}
+.panel{position:fixed;top:0;right:0;bottom:0;width:440px;max-width:92vw;background:var(--surface);border-left:1px solid var(--border2);z-index:201;transform:translateX(100%);transition:transform .18s ease;overflow-y:auto}
+.panel.open{transform:translateX(0)}
+.panel-head{padding:22px 24px 18px;border-bottom:1px solid var(--border)}
+.panel-close{position:absolute;top:18px;right:18px;width:28px;height:28px;border-radius:7px;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);cursor:pointer;font-size:14px}
+.panel-close:hover{color:var(--text)}
+.panel-body{padding:22px 24px}
+.pb-section{margin-bottom:22px}
+.pb-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.cost-row{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;padding:7px 0;border-bottom:1px solid var(--border)}
+.cost-row:last-child{border-bottom:none}
+.artist-chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;background:var(--surface3);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;margin:0 6px 6px 0}
+.chip-av{width:16px;height:16px;border-radius:50%;background:var(--cyan-dim);color:var(--cyan);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.timeline-item{display:flex;gap:10px;padding:8px 0}
+.timeline-dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);margin-top:5px;flex-shrink:0}
+.timeline-text{font-size:12px;color:var(--text)}
+.timeline-time{font-size:10.5px;color:var(--muted)}
+
+/* KANBAN */
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:260px;gap:14px;overflow-x:auto;padding-bottom:12px}
+.board-col{background:var(--surface);border:1px solid var(--border2);border-radius:10px;display:flex;flex-direction:column;min-height:200px}
+.board-col-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.board-col-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.board-col-count{font-size:10px;color:var(--muted);background:var(--surface3);border-radius:10px;padding:1px 7px}
+.board-col-body{padding:10px;display:flex;flex-direction:column;gap:8px;min-height:120px;flex:1}
+.board-col-body.dragover{background:rgba(34,211,238,.05);outline:1px dashed var(--cyan-dim2);outline-offset:-4px}
+.board-card{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;cursor:grab;font-size:12px}
+.board-card:active{cursor:grabbing}
+.board-card.dragging{opacity:.4}
+.bc-id{font-size:10px;color:var(--muted);margin-bottom:3px}
+.bc-name{font-weight:500;margin-bottom:6px;line-height:1.3}
+.bc-foot{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:var(--muted)}
+
+/* GATEWAY / AWS */
+.split{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:16px}
+.card-title{font-size:12px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.bar-row{display:flex;align-items:center;gap:10px;font-size:11.5px;margin-bottom:10px}
+.bar-label{width:130px;flex-shrink:0;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:7px;background:var(--surface3);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:var(--cyan);border-radius:4px}
+.bar-val{width:64px;text-align:right;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--text);flex-shrink:0}
+.svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.svc-card{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:14px}
+.svc-name{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.svc-val{font-size:17px;font-weight:700;color:#fff}
+.svc-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.log-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11.5px}
+.log-row:last-child{border-bottom:none}
+.log-time{width:62px;color:var(--muted);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;flex-shrink:0}
+.log-dcc{width:62px;flex-shrink:0}
+.dcc-pill{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase}
+.dcc-c4d{background:var(--cyan-dim);color:var(--cyan)}
+.dcc-hou{background:var(--amber-dim);color:var(--amber)}
+.dcc-res{background:var(--violet-dim);color:var(--violet)}
+.log-mid{flex:1;color:var(--text)}
+.log-proj{color:var(--muted);font-size:10.5px}
+.log-cost{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--text);flex-shrink:0}
+
+/* ROLLOUT */
+.phase-rail{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:8px}
+.phase-card{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:16px;position:relative}
+.phase-weeks{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;color:var(--cyan);margin-bottom:6px}
+.phase-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:10px}
+.phase-check{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--muted2);margin-bottom:8px;cursor:pointer}
+.phase-check input{margin-top:3px;accent-color:var(--cyan)}
+.phase-check.done span{color:var(--muted);text-decoration:line-through}
+.phase-progress{height:4px;background:var(--surface3);border-radius:3px;overflow:hidden;margin-top:10px}
+.phase-progress-fill{height:100%;background:var(--cyan);border-radius:3px;transition:width .2s}
+
+/* DECISIONS */
+.decision-card{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:16px 18px;margin-bottom:12px}
+.decision-q{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px}
+.decision-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.decision-select{background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:7px 10px;font-size:12px}
+.decision-status{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase}
+.ds-open{background:var(--amber-dim);color:var(--amber)}
+.ds-set{background:var(--green-dim);color:var(--green)}
+
+@media(max-width:900px){
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .split{grid-template-columns:1fr}
+  .svc-grid{grid-template-columns:1fr}
+  .phase-rail{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><div class="logo-mark">⚡</div>Motion Adrenaline</div>
+  <div class="logo-sub">Pipeline OS · Internal</div>
+  <div class="nav-links" id="nav-links"></div>
+  <div class="nav-right"><div class="env-pill"><span class="env-dot"></span>Mock data — no backend connected</div></div>
+</nav>
+
+<!-- OVERVIEW -->
+<div id="view-overview" class="view">
+  <div class="view-head">
+    <div class="view-title">Overview</div>
+    <div class="view-sub">Every job follows the same path. Time, render cost and AI cost are logged against the project ID at every stage, so the estimate, the actuals and the invoice all come from the same data.</div>
+  </div>
+  <div class="stats-row" id="ov-stats"></div>
+  <div class="flow" id="ov-flow"></div>
+  <div class="split">
+    <div class="card">
+      <div class="card-title">Projects by stage</div>
+      <div id="ov-stage-bars"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Spend this month</div>
+      <div id="ov-spend-bars"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECTS -->
+<div id="view-projects" class="view">
+  <div class="view-head">
+    <div class="view-title">Projects</div>
+    <div class="view-sub">Budget, time and cost tracking per project ID. Click a row for the full breakdown.</div>
+  </div>
+  <div class="toolbar">
+    <div class="ftabs" id="proj-filters"></div>
+    <div class="search-wrap"><input type="text" id="proj-search" placeholder="Search projects or clients..."></div>
+  </div>
+  <table>
+    <thead><tr>
+      <th data-sort="id">Project</th>
+      <th data-sort="stage">Stage</th>
+      <th data-sort="budget">Budget used</th>
+      <th data-sort="spentTime">Time $</th>
+      <th data-sort="spentRender">Render $</th>
+      <th data-sort="spentAI">AI $</th>
+      <th data-sort="due">Due</th>
+    </tr></thead>
+    <tbody id="proj-tbody"></tbody>
+  </table>
+</div>
+
+<!-- BOARD -->
+<div id="view-board" class="view">
+  <div class="view-head">
+    <div class="view-title">Pipeline Board</div>
+    <div class="view-sub">Drag a project card to move it to its next stage. (Prototype only — not yet wired to the tracker.)</div>
+  </div>
+  <div class="board" id="board-root"></div>
+</div>
+
+<!-- AI GATEWAY -->
+<div id="view-gateway" class="view">
+  <div class="view-head">
+    <div class="view-title">AI Gateway</div>
+    <div class="view-sub">One studio gateway in front of every model. C4D, Houdini and Resolve plugins all call it — never a model directly — so keys, logging and per-project cost stay centralized.</div>
+  </div>
+  <div class="svc-grid" id="gw-stats"></div>
+  <div class="split">
+    <div class="card">
+      <div class="card-title">Recent requests</div>
+      <div id="gw-log"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Cost by model</div>
+      <div id="gw-model-bars"></div>
+    </div>
+  </div>
+</div>
+
+<!-- AWS -->
+<div id="view-aws" class="view">
+  <div class="view-head">
+    <div class="view-title">AWS</div>
+    <div class="view-sub">Render farm, GPU instances and storage — tagged by project_id so every dollar lands on the right invoice.</div>
+  </div>
+  <div class="svc-grid" id="aws-stats"></div>
+  <div class="split">
+    <div class="card">
+      <div class="card-title">Deadline Cloud queues</div>
+      <div id="aws-queues"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Cost by project (this month)</div>
+      <div id="aws-cost-bars"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ROLLOUT -->
+<div id="view-rollout" class="view">
+  <div class="view-head">
+    <div class="view-title">90-Day Rollout Plan</div>
+    <div class="view-sub">Run both projects — AI connectors and AWS — in parallel on one pilot job. Don't migrate the whole studio until it ships. Check items off as the team completes them.</div>
+  </div>
+  <div class="phase-rail" id="rollout-phases"></div>
+</div>
+
+<!-- DECISIONS -->
+<div id="view-decisions" class="view">
+  <div class="view-head">
+    <div class="view-title">Decisions To Make First</div>
+    <div class="view-sub">Pick a leaning for each so the build can proceed. Saved locally in this browser only.</div>
+  </div>
+  <div id="decisions-list"></div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+<div class="panel" id="panel">
+  <button class="panel-close" onclick="closePanel()">✕</button>
+  <div id="panel-content"></div>
+</div>
+
+<script>
+/* ---------- mock data ---------- */
+const STAGES = [
+  {key:'intake',     label:'Intake & PM',        cls:'st-intake'},
+  {key:'preprod',    label:'Pre-Pro (AI)',        cls:'st-preprod'},
+  {key:'production',label:'Production',          cls:'st-production'},
+  {key:'aws',        label:'AWS Render / AI',     cls:'st-aws'},
+  {key:'resolve',    label:'Resolve Assembly',    cls:'st-resolve'},
+  {key:'delivered',  label:'Delivered / Invoiced',cls:'st-delivered'},
+];
+const stageInfo = k => STAGES.find(s=>s.key===k);
+
+let PROJECTS = [
+  {id:'PRJ-1038',name:'Horizon EV — Brand Film',client:'Horizon Motors',stage:'intake',budget:62000,spentTime:4200,spentRender:0,spentAI:180,due:'2026-12-02',artists:['R. Patel'],updated:'2d ago'},
+  {id:'PRJ-1041',name:'Solace Skincare — Social Cutdowns',client:'Solace Beauty',stage:'preprod',budget:21000,spentTime:6800,spentRender:0,spentAI:420,due:'2026-11-05',artists:['J. Lee','K. Nowak'],updated:'6h ago'},
+  {id:'PRJ-1033',name:'Aether Games — Launch Trailer',client:'Aether Interactive',stage:'production',budget:138000,spentTime:54200,spentRender:3100,spentAI:1860,due:'2026-11-21',artists:['M. Osei','D. Flores','S. Chen'],updated:'1h ago'},
+  {id:'PRJ-1045',name:'Pulse Audio — Product Reveal',client:'Pulse Audio',stage:'production',budget:52000,spentTime:19200,spentRender:1100,spentAI:980,due:'2026-12-10',artists:['A. Kim','J. Lee'],updated:'40m ago'},
+  {id:'PRJ-1029',name:'Nova Sportswear — Hero Spot',client:'Nova Sportswear',stage:'aws',budget:95000,spentTime:71000,spentRender:9800,spentAI:2140,due:'2026-10-24',artists:['D. Flores','A. Kim'],updated:'22m ago'},
+  {id:'PRJ-1024',name:'Lumen Finance — Explainer Series',client:'Lumen Financial',stage:'resolve',budget:34000,spentTime:28900,spentRender:1400,spentAI:560,due:'2026-10-18',artists:['K. Nowak'],updated:'3h ago'},
+  {id:'PRJ-1017',name:'Crestline Realty — Flythrough',client:'Crestline Group',stage:'delivered',budget:18500,spentTime:17200,spentRender:2600,spentAI:210,due:'2026-10-02',artists:['R. Patel'],updated:'5d ago'},
+  {id:'PRJ-1012',name:'Atlas Outdoor — Brand Anthem',client:'Atlas Outdoor',stage:'delivered',budget:76000,spentTime:69800,spentRender:8200,spentAI:1120,due:'2026-09-20',artists:['M. Osei','S. Chen'],updated:'9d ago'},
+];
+
+const GW_LOG = [
+  {time:'09:42',dcc:'hou',dccLabel:'Houdini',proj:'PRJ-1033',use:'PDG batch upres — 24 shots',model:'ComfyUI · Real-ESRGAN',cost:4.80},
+  {time:'09:10',dcc:'c4d',dccLabel:'C4D',proj:'PRJ-1045',use:'Tileable texture set (4)',model:'SDXL fine-tune',cost:1.20},
+  {time:'08:55',dcc:'res',dccLabel:'Resolve',proj:'PRJ-1024',use:'Auto-conform shot notes',model:'Bedrock · Claude',cost:0.06},
+  {time:'08:31',dcc:'hou',dccLabel:'Houdini',proj:'PRJ-1033',use:'Scene assistant — pyro setup script',model:'Bedrock · Claude',cost:0.14},
+  {time:'08:02',dcc:'c4d',dccLabel:'C4D',proj:'PRJ-1041',use:'Mood board generation (6 frames)',model:'SDXL fine-tune',cost:1.80},
+  {time:'07:48',dcc:'hou',dccLabel:'Houdini',proj:'PRJ-1029',use:'Lookdev style pass — depth+normal',model:'ComfyUI · SDXL ControlNet',cost:3.40},
+  {time:'07:20',dcc:'res',dccLabel:'Resolve',proj:'PRJ-1017',use:'Publish notes summary',model:'Bedrock · Claude',cost:0.04},
+];
+
+const AWS_QUEUES = [
+  {name:'Lighting',spot:12,onDemand:2,queued:34},
+  {name:'Comp',spot:8,onDemand:0,queued:11},
+  {name:'Simulation',spot:0,onDemand:4,queued:3},
+];
+
+const ROLLOUT = [
+  {weeks:'Weeks 1–3',title:'Foundation',items:[
+    {t:'Pick the tracker and time tool',done:true},
+    {t:'Set naming and folder rules',done:true},
+    {t:'Set up AWS accounts, VPN and SSO',done:false},
+    {t:'Start the AI gateway',done:false},
+  ]},
+  {weeks:'Weeks 4–7',title:'First connections',items:[
+    {t:'Houdini shelf tool and panel',done:false},
+    {t:'Deadline Cloud test renders',done:false},
+    {t:'Project cost tags',done:false},
+    {t:'Resolve auto-conform script',done:false},
+  ]},
+  {weeks:'Weeks 8–10',title:'Pilot job',items:[
+    {t:'One real client project, start to finish',done:false},
+    {t:'C4D plugin',done:false},
+    {t:'Compare actuals with the bid',done:false},
+  ]},
+  {weeks:'Weeks 11–13',title:'Roll out',items:[
+    {t:'Write SOPs and train artists',done:false},
+    {t:'Add phase 2 AI tools',done:false},
+    {t:'Monthly cost review',done:false},
+  ]},
+];
+
+const DECISIONS = [
+  {id:'tracker',q:'Which tracker is the system of record?',options:['Undecided','ShotGrid','ftrack','Kitsu']},
+  {id:'renderer',q:'Which renderers do you use? (decides farm licensing)',options:['Undecided','Redshift','Octane','Karma','Arnold','Mixed']},
+  {id:'split',q:'How much rendering stays local vs. goes to AWS?',options:['Undecided','Mostly local','Mostly AWS','Even split, overflow to AWS']},
+  {id:'models',q:'Which AI models are cleared for client work?',options:['Undecided','In-house AWS only','Approved 3rd-party APIs OK','Case-by-case per contract']},
+  {id:'owner',q:'Who owns the pipeline?',options:['Undecided','In-house TD','Outside developer','Shared / TBD']},
+];
+
+/* ---------- nav ---------- */
+const VIEWS = [
+  {key:'overview',label:'Overview'},
+  {key:'projects',label:'Projects'},
+  {key:'board',label:'Pipeline Board'},
+  {key:'gateway',label:'AI Gateway'},
+  {key:'aws',label:'AWS'},
+  {key:'rollout',label:'Rollout'},
+  {key:'decisions',label:'Decisions'},
+];
+const navLinks = document.getElementById('nav-links');
+VIEWS.forEach((v,i)=>{
+  const b = document.createElement('button');
+  b.className = 'nav-btn'+(i===0?' active':'');
+  b.textContent = v.label;
+  b.onclick = ()=>showView(v.key,b);
+  navLinks.appendChild(b);
+});
+function showView(key,btn){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+key).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+
+const money = n => '$'+Math.round(n).toLocaleString('en-US');
+const pct = (used,total) => Math.min(100, Math.round(used/total*100));
+const barColor = p => p>=100?'var(--red)':p>=85?'var(--amber)':'var(--cyan)';
+
+/* ---------- overview ---------- */
+function renderOverview(){
+  const active = PROJECTS.filter(p=>p.stage!=='delivered');
+  const totalBudget = PROJECTS.reduce((a,p)=>a+p.budget,0);
+  const totalSpent = PROJECTS.reduce((a,p)=>a+p.spentTime+p.spentRender+p.spentAI,0);
+  const aiSpend = PROJECTS.reduce((a,p)=>a+p.spentAI,0);
+  const renderSpend = PROJECTS.reduce((a,p)=>a+p.spentRender,0);
+  const stats = [
+    {lbl:'Active Projects',val:active.length},
+    {lbl:'Total Budget',val:money(totalBudget)},
+    {lbl:'Total Spent',val:money(totalSpent)},
+    {lbl:'AI Spend (MTD)',val:money(aiSpend)},
+    {lbl:'Render Spend (MTD)',val:money(renderSpend)},
+  ];
+  document.getElementById('ov-stats').innerHTML = stats.map(s=>`
+    <div class="stat-card"><div class="stat-lbl">${s.lbl}</div><div class="stat-num">${s.val}</div></div>
+  `).join('');
+
+  const flowSteps = [
+    {n:1,l:'Project comes in',d:'Brief, budget, timeline logged under a project ID'},
+    {n:2,l:'PM + split to artists',d:'Estimate, schedule, assignments'},
+    {n:3,l:'Pre-pro built with AI',d:'Boards, mood, previz via the gateway'},
+    {n:4,l:'AI connectors in C4D / Houdini',d:'Scene assistant, textures, lookdev'},
+    {n:5,l:'AWS: render + AI models',d:'Deadline Cloud, Bedrock, GPU instances'},
+    {n:6,l:'Assemble in Resolve',d:'Auto-conform, QC, output'},
+    {n:7,l:'Invoice',d:'Actuals reconciled against the estimate'},
+  ];
+  document.getElementById('ov-flow').innerHTML = flowSteps.map((s,i)=>`
+    <div class="flow-step">
+      <div class="flow-num">${s.n}</div>
+      <div class="flow-label">${s.l}</div>
+      <div class="flow-desc">${s.d}</div>
+      <div class="flow-track">tracked</div>
+    </div>
+    ${i<flowSteps.length-1?'<div class="flow-arrow">→</div>':''}
+  `).join('');
+
+  document.getElementById('ov-stage-bars').innerHTML = STAGES.map(s=>{
+    const n = PROJECTS.filter(p=>p.stage===s.key).length;
+    const p = pct(n, PROJECTS.length);
+    return `<div class="bar-row"><div class="bar-label">${s.label}</div><div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div><div class="bar-val">${n}</div></div>`;
+  }).join('');
+
+  const spendByProj = [...PROJECTS].sort((a,b)=>(b.spentTime+b.spentRender+b.spentAI)-(a.spentTime+a.spentRender+a.spentAI)).slice(0,6);
+  const maxSpend = Math.max(...spendByProj.map(p=>p.spentTime+p.spentRender+p.spentAI));
+  document.getElementById('ov-spend-bars').innerHTML = spendByProj.map(p=>{
+    const total = p.spentTime+p.spentRender+p.spentAI;
+    return `<div class="bar-row"><div class="bar-label">${p.id}</div><div class="bar-track"><div class="bar-fill" style="width:${pct(total,maxSpend)}%"></div></div><div class="bar-val">${money(total)}</div></div>`;
+  }).join('');
+}
+
+/* ---------- projects table ---------- */
+let projFilter = 'all', projSearch = '', sortField = 'id', sortDir = 1;
+function renderProjFilters(){
+  const wrap = document.getElementById('proj-filters');
+  const opts = [{key:'all',label:'All'}].concat(STAGES.map(s=>({key:s.key,label:s.label})));
+  wrap.innerHTML = opts.map(o=>`<button class="ftab${projFilter===o.key?' active':''}" data-key="${o.key}">${o.label}</button>`).join('');
+  wrap.querySelectorAll('.ftab').forEach(b=>b.onclick=()=>{projFilter=b.dataset.key;renderProjFilters();renderProjTable();});
+}
+document.getElementById('proj-search').addEventListener('input', e=>{projSearch=e.target.value.toLowerCase();renderProjTable();});
+document.querySelectorAll('th[data-sort]').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const f = th.dataset.sort;
+    if(sortField===f) sortDir*=-1; else {sortField=f; sortDir=1;}
+    renderProjTable();
+  });
+});
+function renderProjTable(){
+  let rows = PROJECTS.filter(p=>projFilter==='all'||p.stage===projFilter)
+    .filter(p=>!projSearch || p.name.toLowerCase().includes(projSearch) || p.client.toLowerCase().includes(projSearch) || p.id.toLowerCase().includes(projSearch));
+  rows.sort((a,b)=>{
+    let av=a[sortField], bv=b[sortField];
+    if(sortField==='budget'){av=(a.spentTime+a.spentRender+a.spentAI)/a.budget; bv=(b.spentTime+b.spentRender+b.spentAI)/b.budget;}
+    if(typeof av==='string') return av.localeCompare(bv)*sortDir;
+    return (av-bv)*sortDir;
+  });
+  document.getElementById('proj-tbody').innerHTML = rows.map(p=>{
+    const spent = p.spentTime+p.spentRender+p.spentAI;
+    const p2 = pct(spent,p.budget);
+    const si = stageInfo(p.stage);
+    return `<tr class="proj-row" data-id="${p.id}">
+      <td><div class="pname">${p.name}</div><div class="pclient">${p.client} · <span class="pid">${p.id}</span></div></td>
+      <td><span class="stage-pill ${si.cls}"><span class="sdot"></span>${si.label}</span></td>
+      <td><div class="cost-num ${p2>=100?'over':''}">${p2}%</div><div class="budget-bar"><div class="budget-fill" style="width:${Math.min(p2,100)}%;background:${barColor(p2)}"></div></div></td>
+      <td class="cost-num">${money(p.spentTime)}</td>
+      <td class="cost-num">${money(p.spentRender)}</td>
+      <td class="cost-num">${money(p.spentAI)}</td>
+      <td>${p.due}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px">No projects match.</td></tr>`;
+  document.querySelectorAll('.proj-row').forEach(tr=>tr.onclick=()=>openPanel(tr.dataset.id));
+}
+
+/* ---------- detail panel ---------- */
+function openPanel(id){
+  const p = PROJECTS.find(x=>x.id===id);
+  if(!p) return;
+  const si = stageInfo(p.stage);
+  const spent = p.spentTime+p.spentRender+p.spentAI;
+  document.getElementById('panel-content').innerHTML = `
+    <div class="panel-head">
+      <div class="pid mono" style="margin-bottom:6px">${p.id}</div>
+      <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:6px">${p.name}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">${p.client} · Due ${p.due}</div>
+      <span class="stage-pill ${si.cls}"><span class="sdot"></span>${si.label}</span>
+    </div>
+    <div class="panel-body">
+      <div class="pb-section">
+        <div class="pb-label">Budget</div>
+        <div class="budget-bar" style="width:100%;height:7px;margin-bottom:6px"><div class="budget-fill" style="width:${Math.min(pct(spent,p.budget),100)}%;background:${barColor(pct(spent,p.budget))}"></div></div>
+        <div style="font-size:12px;color:var(--muted)">${money(spent)} of ${money(p.budget)} used (${pct(spent,p.budget)}%)</div>
+      </div>
+      <div class="pb-section">
+        <div class="pb-label">Cost breakdown</div>
+        <div class="cost-row"><span>Time</span><span class="cost-num">${money(p.spentTime)}</span></div>
+        <div class="cost-row"><span>Render (AWS)</span><span class="cost-num">${money(p.spentRender)}</span></div>
+        <div class="cost-row"><span>AI (gateway)</span><span class="cost-num">${money(p.spentAI)}</span></div>
+        <div class="cost-row"><strong>Total</strong><strong class="cost-num">${money(spent)}</strong></div>
+      </div>
+      <div class="pb-section">
+        <div class="pb-label">Artists</div>
+        ${p.artists.map(a=>`<span class="artist-chip"><span class="chip-av">${a[0]}</span>${a}</span>`).join('')}
+      </div>
+      <div class="pb-section">
+        <div class="pb-label">Activity</div>
+        <div class="timeline-item"><div class="timeline-dot"></div><div><div class="timeline-text">Last update</div><div class="timeline-time">${p.updated}</div></div></div>
+        <div class="timeline-item"><div class="timeline-dot" style="background:var(--muted)"></div><div><div class="timeline-text">Entered ${si.label}</div><div class="timeline-time">stage history coming once the tracker is wired up</div></div></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('panel').classList.add('open');
+}
+function closePanel(){
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('panel').classList.remove('open');
+}
+
+/* ---------- board ---------- */
+let dragId = null;
+function renderBoard(){
+  const root = document.getElementById('board-root');
+  root.innerHTML = STAGES.map(s=>`
+    <div class="board-col">
+      <div class="board-col-head">
+        <span class="board-col-title">${s.label}</span>
+        <span class="board-col-count" data-count="${s.key}">${PROJECTS.filter(p=>p.stage===s.key).length}</span>
+      </div>
+      <div class="board-col-body" data-stage="${s.key}"></div>
+    </div>
+  `).join('');
+
+  STAGES.forEach(s=>{
+    const body = root.querySelector(`.board-col-body[data-stage="${s.key}"]`);
+    PROJECTS.filter(p=>p.stage===s.key).forEach(p=>{
+      const spent = p.spentTime+p.spentRender+p.spentAI;
+      const card = document.createElement('div');
+      card.className = 'board-card';
+      card.draggable = true;
+      card.dataset.id = p.id;
+      card.innerHTML = `<div class="bc-id mono">${p.id}</div><div class="bc-name">${p.name}</div><div class="bc-foot"><span>${p.client}</span><span>${pct(spent,p.budget)}% used</span></div>`;
+      card.addEventListener('dragstart', e=>{dragId=p.id; card.classList.add('dragging');});
+      card.addEventListener('dragend', ()=>card.classList.remove('dragging'));
+      card.addEventListener('click', ()=>openPanel(p.id));
+      body.appendChild(card);
+    });
+    body.addEventListener('dragover', e=>{e.preventDefault(); body.classList.add('dragover');});
+    body.addEventListener('dragleave', ()=>body.classList.remove('dragover'));
+    body.addEventListener('drop', e=>{
+      e.preventDefault();
+      body.classList.remove('dragover');
+      const proj = PROJECTS.find(p=>p.id===dragId);
+      if(proj){ proj.stage = s.key; proj.updated = 'just now'; renderBoard(); renderProjTable(); renderOverview(); }
+    });
+  });
+}
+
+/* ---------- AI gateway ---------- */
+function renderGateway(){
+  const totalCost = GW_LOG.reduce((a,l)=>a+l.cost,0);
+  const byTool = {};
+  GW_LOG.forEach(l=>{byTool[l.dccLabel]=(byTool[l.dccLabel]||0)+1});
+  const stats = [
+    {lbl:'Requests today',val:GW_LOG.length},
+    {lbl:'Cost today',val:'$'+totalCost.toFixed(2)},
+    {lbl:'Connected DCCs',val:Object.keys(byTool).length+' / 3'},
+  ];
+  document.getElementById('gw-stats').innerHTML = stats.map(s=>`<div class="svc-card"><div class="svc-name">${s.lbl}</div><div class="svc-val">${s.val}</div></div>`).join('');
+
+  document.getElementById('gw-log').innerHTML = GW_LOG.map(l=>`
+    <div class="log-row">
+      <div class="log-time">${l.time}</div>
+      <div class="log-dcc"><span class="dcc-pill dcc-${l.dcc}">${l.dccLabel}</span></div>
+      <div class="log-mid">${l.use}<div class="log-proj">${l.proj} · ${l.model}</div></div>
+      <div class="log-cost">$${l.cost.toFixed(2)}</div>
+    </div>
+  `).join('');
+
+  const byModel = {};
+  GW_LOG.forEach(l=>{byModel[l.model]=(byModel[l.model]||0)+l.cost});
+  const maxM = Math.max(...Object.values(byModel));
+  document.getElementById('gw-model-bars').innerHTML = Object.entries(byModel).sort((a,b)=>b[1]-a[1]).map(([m,c])=>`
+    <div class="bar-row"><div class="bar-label">${m}</div><div class="bar-track"><div class="bar-fill" style="width:${pct(c,maxM)}%"></div></div><div class="bar-val">$${c.toFixed(2)}</div></div>
+  `).join('');
+}
+
+/* ---------- AWS ---------- */
+function renderAWS(){
+  const stats = [
+    {lbl:'GPU instances running',val:'2 / 3'},
+    {lbl:'Active render fleets',val:'3'},
+    {lbl:'S3 this month',val:'4.2 TB'},
+  ];
+  document.getElementById('aws-stats').innerHTML = stats.map(s=>`<div class="svc-card"><div class="svc-name">${s.lbl}</div><div class="svc-val">${s.val}</div></div>`).join('');
+
+  document.getElementById('aws-queues').innerHTML = AWS_QUEUES.map(q=>`
+    <div class="cost-row">
+      <span>${q.name}</span>
+      <span class="cost-num">${q.spot} spot · ${q.onDemand} on-demand · ${q.queued} queued</span>
+    </div>
+  `).join('');
+
+  const byProj = [...PROJECTS].map(p=>({id:p.id,cost:p.spentRender+p.spentAI})).filter(p=>p.cost>0).sort((a,b)=>b.cost-a.cost);
+  const maxC = Math.max(...byProj.map(p=>p.cost));
+  document.getElementById('aws-cost-bars').innerHTML = byProj.map(p=>`
+    <div class="bar-row"><div class="bar-label">${p.id}</div><div class="bar-track"><div class="bar-fill" style="width:${pct(p.cost,maxC)}%"></div></div><div class="bar-val">${money(p.cost)}</div></div>
+  `).join('');
+}
+
+/* ---------- rollout ---------- */
+function loadRolloutState(){
+  try{ const raw = localStorage.getItem('pipelineos_rollout'); return raw?JSON.parse(raw):{}; }catch(e){ return {}; }
+}
+function saveRolloutState(state){
+  try{ localStorage.setItem('pipelineos_rollout', JSON.stringify(state)); }catch(e){}
+}
+function renderRollout(){
+  const state = loadRolloutState();
+  document.getElementById('rollout-phases').innerHTML = ROLLOUT.map((ph,pi)=>{
+    const items = ph.items.map((it,ii)=>{
+      const key = pi+'-'+ii;
+      const done = state[key] !== undefined ? state[key] : it.done;
+      return `<label class="phase-check${done?' done':''}"><input type="checkbox" data-key="${key}" ${done?'checked':''}><span>${it.t}</span></label>`;
+    }).join('');
+    const doneCount = ph.items.filter((it,ii)=>{const key=pi+'-'+ii; return state[key]!==undefined?state[key]:it.done;}).length;
+    const p = Math.round(doneCount/ph.items.length*100);
+    return `<div class="phase-card">
+      <div class="phase-weeks">${ph.weeks}</div>
+      <div class="phase-title">${ph.title}</div>
+      ${items}
+      <div class="phase-progress"><div class="phase-progress-fill" style="width:${p}%"></div></div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('.phase-check input').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      const s = loadRolloutState();
+      s[cb.dataset.key] = cb.checked;
+      saveRolloutState(s);
+      renderRollout();
+    });
+  });
+}
+
+/* ---------- decisions ---------- */
+function loadDecisionState(){
+  try{ const raw = localStorage.getItem('pipelineos_decisions'); return raw?JSON.parse(raw):{}; }catch(e){ return {}; }
+}
+function saveDecisionState(state){
+  try{ localStorage.setItem('pipelineos_decisions', JSON.stringify(state)); }catch(e){}
+}
+function renderDecisions(){
+  const state = loadDecisionState();
+  document.getElementById('decisions-list').innerHTML = DECISIONS.map(d=>{
+    const val = state[d.id] || 'Undecided';
+    const set = val !== 'Undecided';
+    return `<div class="decision-card">
+      <div class="decision-q">${d.q}</div>
+      <div class="decision-row">
+        <select class="decision-select" data-id="${d.id}">
+          ${d.options.map(o=>`<option value="${o}" ${o===val?'selected':''}>${o}</option>`).join('')}
+        </select>
+        <span class="decision-status ${set?'ds-set':'ds-open'}">${set?'Set':'Open'}</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('.decision-select').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const s = loadDecisionState();
+      s[sel.dataset.id] = sel.value;
+      saveDecisionState(s);
+      renderDecisions();
+    });
+  });
+}
+
+/* ---------- init ---------- */
+showView('overview', navLinks.querySelector('.nav-btn'));
+renderProjFilters();
+renderOverview();
+renderProjTable();
+renderBoard();
+renderGateway();
+renderAWS();
+renderRollout();
+renderDecisions();
+</script>
+</body>
+</html>
