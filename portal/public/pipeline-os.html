@@ -187,6 +187,26 @@ tr.proj-row:hover td{background:rgba(255,255,255,.025)}
 .btn-primary:disabled{opacity:.5;cursor:default}
 .btn-ghost{padding:8px 14px;background:var(--surface3);color:var(--text);border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;transition:background .12s ease}
 .btn-ghost:hover{background:var(--surface2)}
+.btn-primary.btn-sm{width:auto;padding:6px 14px;font-size:11.5px}
+.field-select:disabled{opacity:.5;cursor:default}
+.field-hint{font-size:11px;color:var(--muted);margin-top:10px}
+.session-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.session-status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.session-status.live{color:var(--text)}
+.session-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.session-status.live .session-dot{background:var(--green);box-shadow:0 0 0 3px var(--green-dim);animation:session-pulse 1.4s ease-in-out infinite}
+@keyframes session-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.session-timer{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:600;color:var(--cyan);margin-left:2px}
+.render-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:12px}
+.render-row:last-child{border-bottom:none}
+.render-pass{width:90px;flex-shrink:0;color:var(--text)}
+.render-status-pill{font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;flex-shrink:0;white-space:nowrap}
+.rs-queued{background:rgba(255,255,255,.08);color:#ddd}
+.rs-rendering{background:var(--amber-dim);color:var(--amber)}
+.rs-complete{background:var(--green-dim);color:var(--green)}
+.render-cost{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--text);width:64px;flex-shrink:0;text-align:right}
+.render-styled{font-size:11px;color:var(--green);white-space:nowrap}
+.render-styling{font-size:11px;color:var(--muted);white-space:nowrap}
 .ai-empty{color:var(--muted);font-size:12.5px;padding:36px 0;text-align:center}
 .ai-loading{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12.5px;padding:36px 0;justify-content:center}
 .ai-result-card{border:1px solid var(--border2);border-radius:8px;padding:14px;background:var(--surface2)}
@@ -313,6 +333,21 @@ tr.proj-row:hover td{background:rgba(255,255,255,.025)}
     <div class="view-title">AI Studio</div>
     <div class="view-sub" id="aistudio-sub">Connect to the studio AI gateway — generate, review, and save results straight to the project.</div>
   </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">DCC Connection</div>
+    <div class="session-row">
+      <select class="field-select" id="session-dcc" style="width:auto">
+        <option value="c4d">Cinema 4D</option>
+        <option value="hou">Houdini</option>
+        <option value="res">Resolve</option>
+      </select>
+      <span class="session-status" id="session-status"><span class="session-dot"></span>Not connected</span>
+      <button class="btn-primary btn-sm" id="session-btn" style="margin-left:auto" onclick="toggleSession()">Connect</button>
+    </div>
+    <div class="field-hint">Connecting logs time against the project below automatically, and unlocks sending renders to AWS.</div>
+  </div>
+
   <div class="split">
     <div class="card">
       <div class="card-title">New request</div>
@@ -335,6 +370,25 @@ tr.proj-row:hover td{background:rgba(255,255,255,.025)}
       <div id="ai-result"><div class="ai-empty">Run a request to see the result here.</div></div>
     </div>
   </div>
+
+  <div class="split" style="margin-top:16px">
+    <div class="card">
+      <div class="card-title">Send render to AWS</div>
+      <div class="field-label">Pass</div>
+      <select class="field-select" id="render-pass">
+        <option value="Lighting">Lighting</option>
+        <option value="Comp">Comp</option>
+        <option value="Simulation">Simulation</option>
+      </select>
+      <button class="btn-primary" id="render-submit-btn" style="margin-top:14px" onclick="submitRender()">Send to AWS</button>
+      <div class="field-hint" id="render-hint">Connect your DCC above first.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Renders</div>
+      <div id="render-list"><div class="ai-empty">No renders submitted yet.</div></div>
+    </div>
+  </div>
+
   <div class="card" style="margin-top:16px">
     <div class="card-title">Captured this session</div>
     <div id="ai-captured"></div>
@@ -459,14 +513,25 @@ const DECISIONS = [
 ];
 
 const AI_TOOLS = [
-  {key:'scene',   label:'Scene assistant',    kind:'text',  costRange:[0.08,0.22], model:'Bedrock · Claude'},
-  {key:'texture', label:'Textures & HDRIs',   kind:'image', costRange:[0.90,2.10], model:'SDXL fine-tune'},
-  {key:'lookdev', label:'Look development',   kind:'image', costRange:[1.80,4.20], model:'ComfyUI · SDXL ControlNet'},
-  {key:'helper',  label:'Pipeline helper',    kind:'text',  costRange:[0.02,0.09], model:'Bedrock · Claude'},
+  {key:'scene',   label:'Scene assistant',            kind:'text',  costRange:[0.08,0.22], model:'Bedrock · Claude'},
+  {key:'texture', label:'Textures & HDRIs',            kind:'image', costRange:[0.90,2.10], model:'SDXL fine-tune'},
+  {key:'lookdev', label:'Look development',            kind:'image', costRange:[1.80,4.20], model:'ComfyUI · SDXL ControlNet'},
+  {key:'helper',  label:'Pipeline helper',             kind:'text',  costRange:[0.02,0.09], model:'Bedrock · Claude'},
+  {key:'style',   label:'AI Style Effect (Runway-style)', kind:'image', costRange:[2.50,6.50], model:'Runway-style gen video'},
 ];
 const DCC_LABELS = {c4d:'C4D', hou:'Houdini', res:'Resolve'};
 const ALL_ARTISTS = [...new Set(PROJECTS.flatMap(p=>p.artists))].sort();
 let CAPTURED_ASSETS = [];
+
+/* ---------- DCC session + AWS renders ---------- */
+// A connected session is how time gets logged automatically, and it gates
+// sending a render to AWS — matching the real connect -> work -> render ->
+// bring-it-back-and-style flow this page is standing in for.
+const HOURLY_RATE = 85; // mock blended studio rate, for converting logged session time to $
+const RENDER_PASS_COST = { Lighting:[8,22], Comp:[4,12], Simulation:[12,30] };
+let dccSession = null; // {dcc, projId, startedAt}
+let sessionTimerHandle = null;
+let RENDER_JOBS = [];
 
 /* ---------- roles ---------- */
 // Three personas share this one prototype: Producer and PM see the whole studio,
@@ -849,10 +914,21 @@ let pendingAIResult = null;
 
 function renderAIStudioOptions(){
   const projSel = document.getElementById('ai-project');
-  const prevProj = projSel.value;
+  // While connected, the project MUST stay whatever the session is logging against —
+  // never let a role/artist switch silently rebuild this to a different project.
+  const prevProj = dccSession ? dccSession.projId : projSel.value;
   const projects = scopedProjects();
   projSel.innerHTML = projects.map(p=>`<option value="${p.id}">${p.id} — ${p.name}</option>`).join('');
-  if(projects.some(p=>p.id===prevProj)) projSel.value = prevProj;
+  if(projects.some(p=>p.id===prevProj)){
+    projSel.value = prevProj;
+  } else if(dccSession){
+    const p = PROJECTS.find(x=>x.id===prevProj);
+    const opt = document.createElement('option');
+    opt.value = prevProj;
+    opt.textContent = p ? `${p.id} — ${p.name}` : prevProj;
+    projSel.insertBefore(opt, projSel.firstChild);
+    projSel.value = prevProj;
+  }
 
   const toolSel = document.getElementById('ai-tool');
   if(!toolSel.dataset.filled){
@@ -865,6 +941,145 @@ function renderAIStudioOptions(){
     : 'Preview of the artist-facing AI connector. Generated results are logged to the AI Gateway and attached to the project.';
 
   renderCapturedList();
+  renderSessionUI();
+  renderRenderList();
+}
+
+/* ---------- DCC session (connect, log time) ---------- */
+function fmtTimer(totalSeconds){
+  const m = Math.floor(totalSeconds/60), s = totalSeconds%60;
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function toggleSession(){
+  if(dccSession){
+    clearInterval(sessionTimerHandle);
+    sessionTimerHandle = null;
+    // 1 real second logged as 1 simulated minute, so a short demo session still shows a meaningful amount of time.
+    const minutes = Math.max(1, Math.round((Date.now()-dccSession.startedAt)/1000));
+    const cost = Math.round(minutes/60*HOURLY_RATE*100)/100;
+    const proj = PROJECTS.find(p=>p.id===dccSession.projId);
+    const dccLabel = DCC_LABELS[dccSession.dcc];
+    const projId = dccSession.projId;
+    if(proj){ proj.spentTime += cost; proj.updated = 'just now'; }
+    dccSession = null;
+    renderAll();
+    showToast(`Logged ${minutes}m via ${dccLabel} to ${projId} — $${cost.toFixed(2)}`);
+  } else {
+    const projId = document.getElementById('ai-project').value;
+    if(!projId){ showToast('Pick a project first.'); return; }
+    dccSession = { dcc: document.getElementById('session-dcc').value, projId, startedAt: Date.now() };
+    sessionTimerHandle = setInterval(renderSessionUI, 1000);
+    renderSessionUI();
+  }
+}
+
+function renderSessionUI(){
+  const statusEl = document.getElementById('session-status');
+  const btn = document.getElementById('session-btn');
+  const dccSel = document.getElementById('session-dcc');
+  const projSel = document.getElementById('ai-project');
+  if(!statusEl) return; // view not in DOM yet on first paint
+  if(dccSession){
+    const elapsed = Math.round((Date.now()-dccSession.startedAt)/1000);
+    statusEl.className = 'session-status live';
+    statusEl.innerHTML = `<span class="session-dot"></span>Connected via ${DCC_LABELS[dccSession.dcc]} — logging time<span class="session-timer">${fmtTimer(elapsed)}</span>`;
+    btn.textContent = 'Disconnect';
+    dccSel.disabled = true;
+    projSel.disabled = true;
+  } else {
+    statusEl.className = 'session-status';
+    statusEl.innerHTML = `<span class="session-dot"></span>Not connected`;
+    btn.textContent = 'Connect';
+    dccSel.disabled = false;
+    projSel.disabled = false;
+  }
+  const renderBtn = document.getElementById('render-submit-btn');
+  const renderHint = document.getElementById('render-hint');
+  renderBtn.disabled = !dccSession;
+  renderHint.style.display = dccSession ? 'none' : 'block';
+}
+
+/* ---------- AWS render submission ---------- */
+function submitRender(){
+  if(!dccSession) return;
+  const pass = document.getElementById('render-pass').value;
+  const [lo,hi] = RENDER_PASS_COST[pass];
+  const job = {
+    id: 'RND-'+Math.random().toString(36).slice(2,8),
+    projId: dccSession.projId,
+    artist: CURRENT_ARTIST || 'Producer',
+    pass, status: 'queued',
+    cost: randCost([lo,hi]),
+  };
+  RENDER_JOBS.unshift(job);
+  renderRenderList();
+  setTimeout(()=>{ job.status = 'rendering'; renderRenderList(); }, 900);
+  setTimeout(()=>{
+    job.status = 'complete';
+    const proj = PROJECTS.find(p=>p.id===job.projId);
+    if(proj){ proj.spentRender += job.cost; proj.updated = 'just now'; }
+    renderAll();
+    showToast(`${job.pass} render complete on ${job.projId} — $${job.cost.toFixed(2)}`);
+  }, 2400);
+}
+
+function renderRenderList(){
+  const listEl = document.getElementById('render-list');
+  if(!listEl) return;
+  const list = RENDER_JOBS.filter(j=> ROLE!=='artist' || j.artist===CURRENT_ARTIST);
+  listEl.innerHTML = list.length ? list.map(j=>{
+    let action = '';
+    if(j.status==='complete'){
+      if(j.styled) action = `<span class="render-styled">✓ Styled</span>`;
+      else if(j.styling) action = `<span class="render-styling">Styling…</span>`;
+      else action = `<button class="btn-primary btn-sm" onclick="applyStyleEffect('${j.id}')">Apply AI Style</button>`;
+    }
+    return `<div class="render-row">
+      <span class="render-pass">${j.pass}</span>
+      <span class="render-status-pill rs-${j.status}">${j.status}</span>
+      <span class="log-proj mono" style="flex:1">${j.projId}</span>
+      <span class="render-cost">${j.status==='complete' ? '$'+j.cost.toFixed(2) : '—'}</span>
+      ${action}
+    </div>`;
+  }).join('') : `<div class="ai-empty">No renders submitted yet.</div>`;
+}
+
+/* ---------- bring it back: AI style pass on a finished render ---------- */
+function applyStyleEffect(jobId){
+  const job = RENDER_JOBS.find(j=>j.id===jobId);
+  if(!job || job.styled || job.styling) return;
+  const proj = PROJECTS.find(p=>p.id===job.projId);
+  if(!proj) return;
+  job.styling = true;
+  renderRenderList();
+  setTimeout(()=>{
+    const tool = AI_TOOLS.find(t=>t.key==='style');
+    const cost = randCost(tool.costRange);
+    proj.spentAI += cost;
+    proj.updated = 'just now';
+    GW_LOG.unshift({
+      time: new Date().toTimeString().slice(0,5),
+      dcc: 'res', dccLabel: 'Resolve',
+      proj: proj.id,
+      use: `${tool.label} — ${job.pass} render`,
+      model: tool.model,
+      cost,
+    });
+    CAPTURED_ASSETS.unshift({
+      id: 'AST-'+Math.random().toString(36).slice(2,8),
+      projId: proj.id,
+      artist: job.artist,
+      tool: tool.label,
+      kind: 'image',
+      summary: `Styled ${job.pass} render — cinematic AI pass`,
+      cost,
+    });
+    job.styling = false;
+    job.styled = true;
+    renderAll();
+    showToast(`AI style effect applied to the ${job.pass} render — saved to ${proj.id}`);
+  }, 1100);
 }
 
 function randCost([lo,hi]){ return Math.round((lo + Math.random()*(hi-lo))*100)/100; }
