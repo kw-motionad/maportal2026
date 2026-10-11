@@ -23,7 +23,7 @@ body{background:var(--black);color:var(--text);font-family:-apple-system,BlinkMa
 /* NAV */
 nav{display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--border);background:var(--black);position:sticky;top:0;z-index:100;height:50px;gap:0}
 .logo{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;margin-right:8px;white-space:nowrap;display:flex;align-items:center;gap:8px;flex-shrink:0}
-.logo-mark{width:26px;height:26px;background:var(--gradient);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:900;font-style:italic}
+.logo-mark{width:26px;height:26px;flex-shrink:0;display:block;object-fit:contain}
 .logo-sub{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:3px 7px;border:1px solid var(--border2);border-radius:20px;margin-right:16px;white-space:nowrap}
 .nav-links{display:flex;align-items:center;gap:1px;flex:1;overflow-x:auto;scrollbar-width:none}
 .nav-links::-webkit-scrollbar{display:none}
@@ -240,7 +240,7 @@ tr.proj-row:hover td{background:rgba(255,255,255,.025)}
 <body>
 
 <nav>
-  <div class="logo"><div class="logo-mark">F</div>Full Flux</div>
+  <div class="logo"><img class="logo-mark" src="images/full-flux-mark.png" alt="Full Flux">Full Flux</div>
   <div class="logo-sub">by Motion Adrenaline</div>
   <div class="nav-links" id="nav-links"></div>
   <div class="nav-right">
@@ -453,25 +453,22 @@ const STAGES = [
 ];
 const stageInfo = k => STAGES.find(s=>s.key===k);
 
+// One project only, kept deliberately — a mixed roster of 8 made it hard to follow
+// a single cost/role/stage thread through the prototype. Everything below (the
+// gateway log, role scoping, the board) is built to work with any number of
+// projects, so adding more back later is just adding more array entries.
 let PROJECTS = [
-  {id:'PRJ-1038',name:'Horizon EV — Brand Film',client:'Horizon Motors',stage:'intake',budget:62000,spentTime:4200,spentRender:0,spentAI:180,due:'2026-12-02',artists:['R. Patel'],updated:'2d ago'},
-  {id:'PRJ-1041',name:'Solace Skincare — Social Cutdowns',client:'Solace Beauty',stage:'preprod',budget:21000,spentTime:6800,spentRender:0,spentAI:420,due:'2026-11-05',artists:['J. Lee','K. Nowak'],updated:'6h ago'},
   {id:'PRJ-1033',name:'Aether Games — Launch Trailer',client:'Aether Interactive',stage:'production',budget:138000,spentTime:54200,spentRender:3100,spentAI:1860,due:'2026-11-21',artists:['M. Osei','D. Flores','S. Chen'],updated:'1h ago'},
-  {id:'PRJ-1045',name:'Pulse Audio — Product Reveal',client:'Pulse Audio',stage:'production',budget:52000,spentTime:19200,spentRender:1100,spentAI:980,due:'2026-12-10',artists:['A. Kim','J. Lee'],updated:'40m ago'},
-  {id:'PRJ-1029',name:'Nova Sportswear — Hero Spot',client:'Nova Sportswear',stage:'aws',budget:95000,spentTime:71000,spentRender:9800,spentAI:2140,due:'2026-10-24',artists:['D. Flores','A. Kim'],updated:'22m ago'},
-  {id:'PRJ-1024',name:'Lumen Finance — Explainer Series',client:'Lumen Financial',stage:'resolve',budget:34000,spentTime:28900,spentRender:1400,spentAI:560,due:'2026-10-18',artists:['K. Nowak'],updated:'3h ago'},
-  {id:'PRJ-1017',name:'Crestline Realty — Flythrough',client:'Crestline Group',stage:'delivered',budget:18500,spentTime:17200,spentRender:2600,spentAI:210,due:'2026-10-02',artists:['R. Patel'],updated:'5d ago'},
-  {id:'PRJ-1012',name:'Atlas Outdoor — Brand Anthem',client:'Atlas Outdoor',stage:'delivered',budget:76000,spentTime:69800,spentRender:8200,spentAI:1120,due:'2026-09-20',artists:['M. Osei','S. Chen'],updated:'9d ago'},
 ];
 
 const GW_LOG = [
   {time:'09:42',dcc:'hou',dccLabel:'Houdini',proj:'PRJ-1033',use:'PDG batch upres — 24 shots',model:'ComfyUI · Real-ESRGAN',cost:4.80},
-  {time:'09:10',dcc:'c4d',dccLabel:'C4D',proj:'PRJ-1045',use:'Tileable texture set (4)',model:'SDXL fine-tune',cost:1.20},
-  {time:'08:55',dcc:'res',dccLabel:'Resolve',proj:'PRJ-1024',use:'Auto-conform shot notes',model:'Bedrock · Claude',cost:0.06},
+  {time:'09:10',dcc:'c4d',dccLabel:'C4D',proj:'PRJ-1033',use:'Tileable texture set (4)',model:'SDXL fine-tune',cost:1.20},
+  {time:'08:55',dcc:'res',dccLabel:'Resolve',proj:'PRJ-1033',use:'Auto-conform shot notes',model:'Bedrock · Claude',cost:0.06},
   {time:'08:31',dcc:'hou',dccLabel:'Houdini',proj:'PRJ-1033',use:'Scene assistant — pyro setup script',model:'Bedrock · Claude',cost:0.14},
-  {time:'08:02',dcc:'c4d',dccLabel:'C4D',proj:'PRJ-1041',use:'Mood board generation (6 frames)',model:'SDXL fine-tune',cost:1.80},
-  {time:'07:48',dcc:'hou',dccLabel:'Houdini',proj:'PRJ-1029',use:'Lookdev style pass — depth+normal',model:'ComfyUI · SDXL ControlNet',cost:3.40},
-  {time:'07:20',dcc:'res',dccLabel:'Resolve',proj:'PRJ-1017',use:'Publish notes summary',model:'Bedrock · Claude',cost:0.04},
+  {time:'08:02',dcc:'c4d',dccLabel:'C4D',proj:'PRJ-1033',use:'Mood board generation (6 frames)',model:'SDXL fine-tune',cost:1.80},
+  {time:'07:48',dcc:'hou',dccLabel:'Houdini',proj:'PRJ-1033',use:'Lookdev style pass — depth+normal',model:'ComfyUI · SDXL ControlNet',cost:3.40},
+  {time:'07:20',dcc:'res',dccLabel:'Resolve',proj:'PRJ-1033',use:'Publish notes summary',model:'Bedrock · Claude',cost:0.04},
 ];
 
 const AWS_QUEUES = [
