@@ -3,26 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Studio Pipeline OS — Motion Adrenaline</title>
+<title>Full Flux — Motion Adrenaline</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --black:#0a0a0a;--surface:#141414;--surface2:#1c1c1c;--surface3:#242424;
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
-  --text:#efefef;--muted:#777;--muted2:#aaa;
-  --cyan:#22d3ee;--cyan-dim:rgba(34,211,238,0.1);--cyan-dim2:rgba(34,211,238,0.2);
+  --black:#000000;--surface:#0a0a0f;--surface2:#13101f;--surface3:#1b1630;
+  --border:rgba(139,47,255,0.12);--border2:rgba(139,47,255,0.28);
+  --text:#ffffff;--muted:#636366;--muted2:#aeaeb2;
+  --cyan:#2b8eff;--cyan-dim:rgba(43,142,255,0.12);--cyan-dim2:rgba(43,142,255,0.28);
   --amber:#fbbf24;--amber-dim:rgba(251,191,36,.1);
   --green:#34d399;--green-dim:rgba(52,211,153,.1);
-  --violet:#a78bfa;--violet-dim:rgba(139,92,246,.12);
-  --red:#f87171;--red-dim:rgba(248,113,113,.1);
+  --violet:#8b2fff;--violet-dim:rgba(139,47,255,0.14);
+  --red:#ff453a;--red-dim:rgba(255,69,58,.12);
+  --gradient:linear-gradient(135deg,#2b8eff 0%,#8b2fff 100%);
 }
-body{background:var(--black);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+body{background:var(--black);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',Arial,sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
 
 /* NAV */
 nav{display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--border);background:var(--black);position:sticky;top:0;z-index:100;height:50px;gap:0}
 .logo{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;margin-right:8px;white-space:nowrap;display:flex;align-items:center;gap:8px;flex-shrink:0}
-.logo-mark{width:26px;height:26px;background:var(--cyan);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#000;font-weight:900}
+.logo-mark{width:26px;height:26px;background:var(--gradient);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:900;font-style:italic}
 .logo-sub{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:3px 7px;border:1px solid var(--border2);border-radius:20px;margin-right:16px;white-space:nowrap}
 .nav-links{display:flex;align-items:center;gap:1px;flex:1;overflow-x:auto;scrollbar-width:none}
 .nav-links::-webkit-scrollbar{display:none}
@@ -182,7 +183,7 @@ tr.proj-row:hover td{background:rgba(255,255,255,.025)}
 .field-label:first-child{margin-top:0}
 .field-select,.field-textarea{width:100%;background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:8px 10px;font-size:12.5px;font-family:inherit}
 .field-textarea{resize:vertical;min-height:80px;margin-bottom:16px}
-.btn-primary{width:100%;padding:10px;background:var(--cyan);color:#000;border:none;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;transition:opacity .12s ease}
+.btn-primary{width:100%;padding:10px;background:var(--gradient);color:#fff;border:none;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;transition:opacity .12s ease}
 .btn-primary:hover{opacity:.85}
 .btn-primary:disabled{opacity:.5;cursor:default}
 .btn-ghost{padding:8px 14px;background:var(--surface3);color:var(--text);border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;transition:background .12s ease}
@@ -239,8 +240,8 @@ tr.proj-row:hover td{background:rgba(255,255,255,.025)}
 <body>
 
 <nav>
-  <div class="logo"><div class="logo-mark">⚡</div>Motion Adrenaline</div>
-  <div class="logo-sub">Pipeline OS · Internal</div>
+  <div class="logo"><div class="logo-mark">F</div>Full Flux</div>
+  <div class="logo-sub">by Motion Adrenaline</div>
   <div class="nav-links" id="nav-links"></div>
   <div class="nav-right">
     <div class="role-switch">
